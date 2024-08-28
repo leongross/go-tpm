@@ -199,7 +199,6 @@ func TestEncodingInvalidUnpack(t *testing.T) {
 	if err := UnpackBuf(uiBuf3, &iii); err == nil {
 		t.Fatal("UnpackBuf incorrectly deserialized into a slice of ints (only byte slices are supported)")
 	}
-
 }
 
 func TestSelfMarshaler(t *testing.T) {

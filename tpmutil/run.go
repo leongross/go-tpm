@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Google LLC All rights reserved.
+// Copyright (c) 2018-2024, Google LLC All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,9 +37,11 @@ func RunCommandRaw(rw io.ReadWriter, inb []byte) ([]byte, error) {
 	}
 
 	// f(t) = (2^t)ms, up to 2s
-	var backoffFac uint
-	var rh responseHeader
-	var outb []byte
+	var (
+		backoffFac uint
+		rh         responseHeader
+		outb       []byte
+	)
 
 	for {
 		if _, err := rw.Write(inb); err != nil {
@@ -63,8 +65,7 @@ func RunCommandRaw(rw io.ReadWriter, inb []byte) ([]byte, error) {
 		// Resize the buffer to match the amount read from the TPM.
 		outb = outb[:outlen]
 
-		_, err = Unpack(outb, &rh)
-		if err != nil {
+		if _, err := Unpack(outb, &rh); err != nil {
 			return nil, err
 		}
 

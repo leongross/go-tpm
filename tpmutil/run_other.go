@@ -1,6 +1,6 @@
 //go:build !windows
 
-// Copyright (c) 2018, Google LLC All rights reserved.
+// Copyright (c) 2018-2024, Google LLC All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,39 @@ func OpenTPM(path string) (io.ReadWriteCloser, error) {
 	}
 
 	return rwc, nil
+}
+
+// OpenTPMFile opens a connection to the TPM at the given path. If the file is a
+// device, then it treats it like a normal TPM device.
+func OpenTPMFile(path string) (io.ReadWriteCloser, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if fi.Mode()&os.ModeDevice != 0 {
+		var f *os.File
+		f, err = os.OpenFile(path, os.O_RDWR, 0600)
+		if err != nil {
+			return nil, err
+		}
+		return io.ReadWriteCloser(f), nil
+	}
+	return nil, fmt.Errorf("unsupported TPM file mode %s", fi.Mode().String())
+}
+
+// Use this function if it is known that the path is a Unix domain socket.
+// OpenTPMSocket opens a connection to the Unix domain socket at the given path.
+func OpenTPMSocket(path string) (io.ReadWriteCloser, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if fi.Mode()&os.ModeSocket != 0 {
+		return NewEmulatorReadWriteCloser(path), nil
+	}
+	return nil, fmt.Errorf("unsupported TPM file mode %s", fi.Mode().String())
 }
 
 // dialer abstracts the net.Dial call so test code can provide its own net.Conn
